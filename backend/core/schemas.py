@@ -177,3 +177,129 @@ class SyncContextPullResponse(BaseModel):
     student: MeResponse
     context: StudentContextResponse
 
+
+# ---------------------------------------------------------
+# Recruiter & Marketplace Schemas
+# ---------------------------------------------------------
+
+class RecruiterRegisterRequest(BaseModel):
+    name: str = Field(min_length=2, max_length=255)
+    title: str = Field(min_length=2, max_length=255)
+    email: EmailStr
+    password: str = Field(min_length=4, max_length=128)
+
+
+class RecruiterLoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=1)
+
+
+class RecruiterProfileUpdate(BaseModel):
+    name: str = Field(min_length=2, max_length=255)
+    title: str = Field(min_length=2, max_length=255)
+    bio: str = ""
+    skills: str = ""
+
+
+class RecruiterProfileResponse(BaseModel):
+    id: UUID
+    name: str
+    title: str
+    email: str
+    bio: str
+    skills: str
+    created_at: datetime
+
+
+class RecruiterAuthResponse(BaseModel):
+    success: bool = True
+    access_token: str
+    token_type: str = "bearer"
+    user: RecruiterProfileResponse
+
+
+class JobPayload(BaseModel):
+    title: str = Field(min_length=3, max_length=255)
+    company: str = Field(min_length=2, max_length=255)
+    salary: str = Field(min_length=1, max_length=120)
+    location: str = Field(min_length=2, max_length=255)
+    description: str = Field(min_length=10)
+    logo: str = ""
+    gpa: str = ""
+    languages: str = ""
+    other_reqs: str = ""
+
+
+class JobStatusUpdate(BaseModel):
+    status: Literal["active", "closed"]
+
+
+class JobResponse(BaseModel):
+    id: int
+    title: str
+    company: str
+    description: str
+    salary: str
+    location: str
+    posted_by: str
+    status: str
+    logo: str
+    gpa: str
+    languages: str
+    other_reqs: str
+    created_at: datetime
+
+
+class JobApplyRequest(BaseModel):
+    display_name: Optional[str] = None
+    major: Optional[str] = None
+    student_year: Optional[int] = Field(default=None, ge=1, le=8)
+
+
+ApplicationStatus = Literal["applied", "reviewing", "interview", "accepted", "rejected"]
+
+
+class ApplicationStatusUpdate(BaseModel):
+    status: ApplicationStatus
+
+
+class RecruiterApplicationItem(BaseModel):
+    application_id: int
+    student_email: str
+    job_id: int
+    applied_at: datetime
+    student_major: str
+    student_year: int
+    student_name: str
+    application_status: str
+    job_title: str
+    job_company: str
+
+
+class CVCreateRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    email: Optional[EmailStr] = None
+    major: str = ""
+    university: str = ""
+    gpa: float = Field(default=0.0, ge=0.0, le=4.0)
+    skills: str = ""
+    languages: str = ""
+    bio: str = ""
+    avatar: str = ""
+    certificates: str = "[]"
+
+
+class CVResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    major: str
+    university: str
+    gpa: float
+    skills: str
+    languages: str
+    bio: str
+    avatar: str
+    certificates: str
+    source: Literal["cv_builder", "student_sync"] = "cv_builder"
+

@@ -1,5 +1,5 @@
-"""Shared FastAPI dependency: extract and validate the Bearer token,
-return the authenticated Student ORM instance."""
+"""Shared FastAPI dependencies: extract and validate Bearer JWTs,
+returning the authenticated Student or Recruiter ORM instance."""
 
 import uuid
 from fastapi import Depends, HTTPException, status
@@ -19,7 +19,9 @@ def get_current_student(
     db: Annotated[Session, Depends(get_db)],
 ) -> models.Student:
     try:
-        student_id: uuid.UUID = decode_access_token(credentials.credentials)
+        student_id: uuid.UUID = decode_access_token(
+            credentials.credentials, expected_role="student"
+        )
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -35,3 +37,30 @@ def get_current_student(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return student
+
+
+def get_current_recruiter(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(_bearer_scheme)],
+    db: Annotated[Session, Depends(get_db)],
+) -> models.Recruiter:
+    try:
+        recruiter_id: uuid.UUID = decode_access_token(
+            credentials.credentials, expected_role="recruiter"
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    recruiter = (
+        db.query(models.Recruiter).filter(models.Recruiter.id == recruiter_id).first()
+    )
+    if not recruiter:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Recruiter not found",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return recruiter
